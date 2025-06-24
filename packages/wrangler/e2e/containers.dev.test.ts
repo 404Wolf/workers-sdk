@@ -8,11 +8,8 @@ const wranglerConfig = {
 	compatibility_date: "2025-04-03",
 	containers: [
 		{
-			configuration: {
-				image: "./Dockerfile",
-			},
+			image: "./Dockerfile",
 			class_name: "Container",
-			name: "http2",
 			max_instances: 2,
 		},
 	],
@@ -32,6 +29,17 @@ const wranglerConfig = {
 	],
 };
 
+const wranglerConfigWithRegistry = {
+	...wranglerConfig,
+	containers: [
+		{
+			image:
+				"registry.cloudflare.com/8d783f274e1f82dc46744c297b015a2f/ci-container-dont-delete:latest",
+			class_name: "Container",
+			max_instances: 2,
+		},
+	],
+};
 // TODO: docker is not installed by default on macOS runners in github actions.
 // And windows is being difficult.
 // So we skip these tests in CI, and test this locally for now :/
@@ -67,10 +75,20 @@ describe.skipIf(process.platform !== "linux" && process.env.CI === "true")(
 					`,
 			});
 		});
-		it(`will build containers when miniflare starts`, async () => {
+		it(`will build containers when dev starts if image field is a dockerfile`, async () => {
 			const worker = helper.runLongLived("wrangler dev");
 			await worker.readUntil(/Preparing container/);
 			await worker.readUntil(/DONE/);
+			// from miniflare output:
+			await worker.readUntil(/Container image\(s\) ready/);
+		});
+
+		it(`will pull containers when dev starts if image field is a registry uri`, async () => {
+			await helper.seed({
+				"wrangler.json": JSON.stringify(wranglerConfigWithRegistry),
+			});
+			const worker = helper.runLongLived("wrangler dev");
+			await worker.readUntil(/Preparing container/);
 			// from miniflare output:
 			await worker.readUntil(/Container image\(s\) ready/);
 		});

@@ -6,7 +6,11 @@
 		"container:build": "wrangler containers build ./ -t container-fixture",
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
-		"start": "wrangler dev"
+		"start": "wrangler dev",
+		"test:ci": "vitest run"
+	},
+	"dependencies": {
+		"@cloudflare/containers": "^0.0.13"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-tsconfig": "workspace:*",
